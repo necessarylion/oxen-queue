@@ -10,8 +10,8 @@ export interface MySQLConfig {
   [key: string]: any;
 }
 
-export interface Job {
-  body?: any;
+export interface Job<T> {
+  body?: T;
   uniqueKey?: string | number;
   priority?: number;
   startTime?: Date | string | number;
@@ -43,8 +43,8 @@ export interface QueueConfig {
   onJobError?: (error: JobError) => Promise<void> | void;
 }
 
-export interface ProcessConfig {
-  workFn: (jobBody: any, job: DatabaseJob) => Promise<any> | any;
+export interface ProcessConfig<T> {
+  workFn: (jobBody: T, job: DatabaseJob) => Promise<any> | any;
   concurrency?: number;
   timeout?: number;
   recoverStuckJobs?: boolean;
@@ -72,14 +72,6 @@ export interface QueueDebug {
   inProcess: number;
   currentlyFetching: boolean;
   workingJobBatch: DatabaseJob[];
-}
-
-export interface AddJobConfig {
-  body?: any;
-  uniqueKey?: string | number;
-  priority?: number;
-  startTime?: Date | string | number;
-  [key: string]: any;
 }
 
 export interface RetryConfig {

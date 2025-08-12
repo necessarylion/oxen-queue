@@ -25,7 +25,7 @@ const errorMessages = {
   noMysqlConnection: `Must supply mysqlConfig argument. It should look something like: const ox = new oxen_queue({ mysqlConfig: { host : 'foo.net', password : 'secret'} ... }).`,
 };
 
-export class Queue {
+export class Queue<T = any> {
   private jobType: string;
   private extraFields: string[];
   private processing: boolean;
@@ -90,11 +90,11 @@ export class Queue {
     this.pollingBackoffRate = pollingBackoffRate;
   }
 
-  async addJob(job: Job | any): Promise<void> {
+  async addJob(job: Job<T>): Promise<void> {
     await this.addJobs([job]);
   }
 
-  async addJobs(jobs: (Job | any)[]): Promise<void> {
+  async addJobs(jobs: (Job<T>)[]): Promise<void> {
     if (jobs.length === 0) {
       return;
     }
@@ -118,7 +118,7 @@ export class Queue {
         priority = IF(priority > VALUES(priority), VALUES(priority), priority)
       `,
       [
-        jobs.map((job: Job | any) => {
+        jobs.map((job: Job<T> | any) => {
           if (isUndefined(job.body)) {
             job = { body: job };
           }
@@ -161,7 +161,7 @@ export class Queue {
     recoverStuckJobs = true,
     maxRetry = 0,
     retryDelay = 0,
-  }: ProcessConfig): Promise<void> {
+  }: ProcessConfig<T>): Promise<void> {
     if (this.processing) {
       throw new Error(errorMessages['alreadyProcessing']);
     }
@@ -233,7 +233,7 @@ export class Queue {
     }
   }
 
-  private async doWork(workFn: (jobBody: any, job: DatabaseJob) => Promise<any> | any): Promise<string | void> {
+  private async doWork(workFn: (jobBody: T, job: DatabaseJob) => Promise<any> | any): Promise<string | void> {
     const job = await this.getNextJob();
 
     if (!job) {
