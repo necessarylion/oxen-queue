@@ -1,6 +1,6 @@
 {
   "name": "oxen-queue-v2",
-  "version": "0.1.12",
+  "version": "0.1.12-alpha.1",
   "description": "A resilient worker queue backed by MySQL.",
   "engines": {
     "node": ">=7.0.0"
