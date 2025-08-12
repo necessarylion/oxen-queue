@@ -11,7 +11,7 @@ export interface MySQLConfig {
 }
 
 export interface Job<T> {
-  body?: T;
+  body: T;
   uniqueKey?: string | number;
   priority?: number;
   startTime?: Date | string | number;
