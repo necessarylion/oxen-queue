@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
-import * as _ from 'lodash';
+import {isUndefined, isNumber} from 'lodash';
 import mysql from 'mysql2/promise';
-import Bluebird from 'bluebird';
 
 import * as storage from './storage';
 import {
@@ -120,11 +119,11 @@ export class Queue {
       `,
       [
         jobs.map((job: Job | any) => {
-          if (_.isUndefined(job.body)) {
+          if (isUndefined(job.body)) {
             job = { body: job };
           }
 
-          const uniqueKey = _.isUndefined(job.uniqueKey)
+          const uniqueKey = isUndefined(job.uniqueKey)
             ? null
             : parseInt(
               crypto
@@ -141,7 +140,7 @@ export class Queue {
             JSON.stringify(job.body),
             this.jobType,
             uniqueKey,
-            _.isNumber(job.priority) ? job.priority : Date.now(),
+            isNumber(job.priority) ? job.priority : Date.now(),
             createdTs,
           ];
 
@@ -157,11 +156,11 @@ export class Queue {
 
   async process({
     workFn,
-    concurrency = 3,
-    timeout = 60,
+    concurrency = 10,
+    timeout = 60 * 60, // 1 hour
     recoverStuckJobs = true,
     maxRetry = 0,
-    retryDelay,
+    retryDelay = 0,
   }: ProcessConfig): Promise<void> {
     if (this.processing) {
       throw new Error(errorMessages['alreadyProcessing']);
@@ -170,7 +169,7 @@ export class Queue {
       throw new Error(errorMessages['workFnMissing']);
     }
 
-    if (!_.isNumber(concurrency)) {
+    if (!isNumber(concurrency)) {
       throw new Error(errorMessages['invalidConcurrency']);
     }
 
@@ -249,11 +248,7 @@ export class Queue {
 
     this.pollingRate = this.fastestPollingRate;
 
-    return Bluebird.resolve(workFn(job.body, job))
-      .timeout(
-        this.jobTimeoutSeconds! * 1000,
-        `timeout for job_id ${job.id} (over ${this.jobTimeoutSeconds} seconds)`
-      )
+    return Promise.resolve(workFn(job.body, job))
       .then(async (jobResult: any) => {
         return this.handleSuccess({ jobId: job.id, jobResult, jobBody: job.body });
       })
@@ -455,7 +450,7 @@ export class Queue {
         }
       }
 
-      await Bluebird.delay(Math.random() * 500 + 500);
+      await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 500));
     }
   }
 

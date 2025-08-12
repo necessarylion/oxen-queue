@@ -13,7 +13,6 @@
     "url": "https://github.com/Opteo/oxen-queue.git"
   },
   "dependencies": {
-    "bluebird": "^3.7.2",
     "lodash": "^4.17.21",
     "mysql2": "^3.12.0"
   },
@@ -24,7 +23,6 @@
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "@types/bluebird": "^3.5.42",
     "@types/lodash": "^4.14.202",
     "@types/node": "^20.10.0",
     "chai": "^4.1.2",
