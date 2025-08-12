@@ -157,7 +157,7 @@ export class Queue<T = any> {
   async process({
     workFn,
     concurrency = 10,
-    timeout = 60 * 60, // 1 hour
+    timeout = 60, // 60 seconds
     recoverStuckJobs = true,
     maxRetry = 0,
     retryDelay = 0,

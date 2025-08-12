@@ -1,6 +1,6 @@
 {
   "name": "oxen-queue-v2",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0-alpha.5",
   "description": "A resilient worker queue backed by MySQL.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
