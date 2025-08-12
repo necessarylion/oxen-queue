@@ -34,7 +34,7 @@ Oxen isn't for you if:
 
 **Infrastructure Requirements**:
 
--   Node 7 or higher
+-   Node 14 or higher
 -   MySQL
 
 **NPM**
@@ -42,7 +42,35 @@ Oxen isn't for you if:
 To install via npm, run:
 
 ```bash
-npm install oxen-queue
+npm install oxen-queue-v2
+```
+
+## TypeScript Support
+
+This package is written in TypeScript and includes full type definitions. You can import it in TypeScript projects:
+
+```typescript
+import { Queue, QueueConfig, Job } from 'oxen-queue-v2';
+
+const config: QueueConfig = {
+  mysqlConfig: {
+    host: 'localhost',
+    user: 'mysql_user',
+    password: 'mysql_password',
+    database: 'my_database'
+  }
+};
+
+const queue = new Queue('job_type', config);
+
+// Add a job with proper typing
+const job: Job = {
+  body: { email: 'user@example.com', template: 'welcome' },
+  priority: 1,
+  uniqueKey: 'welcome_email_user_123'
+};
+
+await queue.addJob(job);
 ```
 
 ## Usage
@@ -52,58 +80,56 @@ npm install oxen-queue
 Here's how you initialise the queue.
 
 ```javascript
-const Oxen = require('oxen-queue')
+const { Queue } = require('oxen-queue-v2')
 
-const ox = new Oxen({
-    mysql_config: {
+const queue = new Queue({
+    mysqlConfig: {
         user: 'mysql_user',
         password: 'mysql_password',
         // anything else you need to pass to the mysql lib
     },
-    db_table: 'oxen_queue', // (optional) name the table that oxen will use in your database.
-    job_type: 'avatar_renders', // give this queue a job type. Other instances of oxen with the same job type will be the same queue.
+    dbTable: 'oxen_queue', // (optional) name the table that oxen will use in your database.
 })
 
 /* If this is your first time running oxen, run this line to automatically create the database table. You should only need to run this once. */
-await ox.createTable()
+await queue.createTable()
 ```
 
-All constructor options that can be used when calling `new Oxen({...})`:
+All constructor options that can be used when calling `new Queue({...})`:
 
 | option               | required? | default      | type                                                                     | description                                                                                                                                                                                                                                  |
 | -------------------- | --------- | ------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| mysql_config         | required  | N/A          | [Connection Object](https://github.com/mysqljs/mysql#connection-options) | This object will be used to connect to your mysql instance. Use whatever you're already using to connect to mysql. At the minimum, you'll probably need `{user: 'mysql_user', password: 'mysql_password'}`                                   |
-| db_table             | optional  | `oxen_queue` | String                                                                   | The table that Oxen will use to store its jobs. If you haven't specified a database name in your `mysql_config`, you'll need to add your database as a prefix, such as `my_database.oxen_queue`                                              |
-| job_type             | required  | N/A          | String                                                                   | The name of your queue, such as `newsletter_emails` or `user_sync`. Queues in other Node.js processes with the same name will share the same state.                                                                                          |
-| extra_fields         | optional  | `[]`         | Array                                                                    | This array of strings allows you to add arbitary parts of your job body directly to your mysql table. Oxen will automatically pluck them out of your job body and insert them. It's up to you to alter your table to fit those extra fields. |
-| fastest_polling_rate | optional  | `100`        | Int                                                                      | The shortest delay between two polls of your table (ms)                                                                                                                                                                                      |
-| slowest_polling_rate | optional  | `10000`      | Int                                                                      | The longest delay between two polls of your table (ms)                                                                                                                                                                                       |
-| polling_backoff_rate | optional  | `1.1`        | Int                                                                      | The rate at which Oxen will slow polling if it finds no more jobs. For example, a rate of `1.2` will cause the next poll to be done 20% later than the last one.                                                                             |
+| mysqlConfig          | required  | N/A          | [Connection Object](https://github.com/mysqljs/mysql#connection-options) | This object will be used to connect to your mysql instance. Use whatever you're already using to connect to mysql. At the minimum, you'll probably need `{user: 'mysql_user', password: 'mysql_password'}`                                   |
+| dbTable              | optional  | `oxen_queue` | String                                                                   | The table that Oxen will use to store its jobs. If you haven't specified a database name in your `mysqlConfig`, you'll need to add your database as a prefix, such as `my_database.oxen_queue`                                              |
+| extraFields          | optional  | `[]`         | Array                                                                    | This array of strings allows you to add arbitary parts of your job body directly to your mysql table. Oxen will automatically pluck them out of your job body and insert them. It's up to you to alter your table to fit those extra fields. |
+| fastestPollingRate   | optional  | `100`        | Int                                                                      | The shortest delay between two polls of your table (ms)                                                                                                                                                                                      |
+| slowestPollingRate   | optional  | `10000`      | Int                                                                      | The longest delay between two polls of your table (ms)                                                                                                                                                                                       |
+| pollingBackoffRate   | optional  | `1.1`        | Int                                                                      | The rate at which Oxen will slow polling if it finds no more jobs. For example, a rate of `1.2` will cause the next poll to be done 20% later than the last one.                                                                             |
 
 ### Adding Jobs
 
 Jobs are added using `addJob()` or `addJobs()`
 
 ```javascript
-const Oxen = require('oxen-queue')
+const { Queue } = require('oxen-queue-v2')
 
-const ox = new Oxen({ /* Initialisation args here */ }}
+const queue = new Queue('job_type', { /* Initialisation args here */ }}
 
 // adding a job with a string body
-ox.addJob({
+queue.addJob({
     body : 'job_body_here'
 })
 
 // adding a job with an object body
-ox.addJob({
+queue.addJob({
     body : { oh : 'hello', arr : [1, 2]}
 })
 
 // shorthand for adding a job with no additional parameters
-ox.addJob('job_body_here')
+queue.addJob('job_body_here')
 
 // adding many jobs at once (batched insert)
-ox.addJobs([
+queue.addJobs([
     { body : 'we' },
     { body : 'all' }
     { body : 'live' }
@@ -128,12 +154,12 @@ All `addJob` options that can be used when calling `addJob({...}`:
 Jobs are consumed using `process()`.
 
 ```javascript
-const Oxen = require('oxen-queue')
+const { Queue } = require('oxen-queue-v2')
 
-const ox = new Oxen({ /* Initialisation args here */ }}
+const queue = new Queue('job_type', { /* Initialisation args here */ }}
 
 // start processing
-ox.process({
+queue.process({
     work_fn : async function (job_body) {
 
         // Do something with your job here
@@ -152,7 +178,7 @@ Your `work_fn` will be called once per job that you added with `addJob()`. It de
 Oxen will save the return of `work_fn` in the `result` field of the table.
 If your jobs return large results, we recommend saving your actual result somewhere else in your infrastructure, and to return a small debugging marker such as "ok" or even `null` or `undefined`. This will keep the Oxen table from growing unnecessarily large.
 
-If for any reason you want to stop processing jobs (for example, in the event of a graceful shutdown), call `ox.stopProcessing()`
+If for any reason you want to stop processing jobs (for example, in the event of a graceful shutdown), call `queue.stopProcessing()`
 
 All options that can be used with `process()`:
 
@@ -171,7 +197,7 @@ If you want to retry a job, you can return a object with a `_oxen_queue_retry_se
 
 ```javascript
 // This will retry the job in 60 seconds if it fails.
-ox.process({
+queue.process({
     work_fn: async function (job_body) {
         try {
             await bigBadBackendThing(job_body.foo)
@@ -253,17 +279,16 @@ Here's an example. Imagine that you have a queue dedicated to updating your paym
     This example assumes that you've added the fields user_id and payment_method to the oxen_queue table.
 */
 
-const Oxen = require('oxen-queue')
+const { Queue } = require('oxen-queue-v2')
 
 // initialize a queue with an extra_fields array
-const ox = new Oxen({
-    mysql_config: { ... },
-    job_type: 'sync_user_subscription_statuses',
-    extra_fields : ['user_id', 'payment_method']
+const ox = new Queue('job_type', {
+    mysqlConfig: { ... },
+    extraFields : ['user_id', 'payment_method']
 })
 
 // add a job with those extra_fields as keys in your job_body
-ox.addJob({
+queue.addJob({
     body: {
         user_id: 123,
         payment_method: 'paypal',
