@@ -22,7 +22,7 @@ const errorMessages = {
   alreadyProcessing: `This queue is already processing`,
   workFnMissing: `Missing workFn argument, nothing to do! Remember that the process() function takes an object as its single argument.`,
   invalidConcurrency: `The concurrency argument must be a number`,
-  noMysqlConnection: `Must supply mysqlConfig argument. It should look something like: const ox = new oxen_queue({ mysqlConfig: { host : 'foo.net', password : 'secret'} ... }).`,
+  noMysqlConnection: `Must supply mysqlConfig argument. It should look something like: const queue = new Queue({ mysqlConfig: { host : 'foo.net', password : 'secret'} ... }).`,
 };
 
 export class Queue<T = any> {
