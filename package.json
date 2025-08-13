@@ -7,10 +7,18 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "author": "Opteo Team <support@opteo.com>",
+  "keywords": [
+    "mysql",
+    "queue",
+    "worker",
+    "resilient",
+    "reliable",
+    "reliable queue"
+  ],
+  "author": "necessarylion",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Opteo/oxen-queue.git"
+    "url": "https://github.com/necessarylion/oxen-queue-v2"
   },
   "dependencies": {
     "lodash": "^4.17.21",
